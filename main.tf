@@ -7,7 +7,7 @@
  * https://docs.aws.amazon.com/de_de/vpc/latest/userguide/what-is-amazon-vpc.html
  */
 resource "aws_vpc" "this" {
-    cidr_block = "${var.vpc_cidr_block}"
+    cidr_block = "${var.cidr}"
     assign_generated_ipv6_cidr_block = true
 
     instance_tenancy = "default"
