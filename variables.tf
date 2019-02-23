@@ -1,4 +1,5 @@
-variable "unit_id" {
+variable "name" {
+    description = "Name to be used on all the resources as identifier"
     default = "basic"  
 }
 
@@ -23,4 +24,19 @@ variable "subnet_cidr_newbits" {
 
 variable "subnet_ipv6_cidr_newbits" {
   default = 8
+}
+
+variable "tags" {
+  description = "A map of tags to add to all resources"
+  default     = {}
+}
+
+variable "vpc_tags" {
+  description = "Additional tags for the VPC"
+  default     = {}
+}
+
+variable "subnet_tags" {
+  description = "Additional tags for the subnets"
+  default     = {}
 }

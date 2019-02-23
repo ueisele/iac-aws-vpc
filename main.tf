@@ -1,8 +1,12 @@
+######
+# VPC
+######
+
 /* Creates a VPC in the region specified for the provider
  * https://www.terraform.io/docs/providers/aws/r/vpc.html
  * https://docs.aws.amazon.com/de_de/vpc/latest/userguide/what-is-amazon-vpc.html
  */
-resource "aws_vpc" "main" {
+resource "aws_vpc" "this" {
     cidr_block = "${var.vpc_cidr_block}"
     assign_generated_ipv6_cidr_block = true
 
@@ -10,11 +14,12 @@ resource "aws_vpc" "main" {
     enable_dns_support = true
     enable_dns_hostnames = true
 
-    tags = {
-        Name = "${var.unit_id}-main"
-        UnitId = "${var.unit_id}"
-    }
+    tags = "${merge(map("Name", format("%s", var.name), "Unit", var.name), var.tags, var.vpc_tags)}"
 }
+
+######
+# Subnets
+######
 
 /*
  * Subnet which is publicly available through an Internet getway
@@ -25,18 +30,15 @@ resource "aws_vpc" "main" {
 resource "aws_subnet" "public" {
     count = "${length(data.aws_availability_zone.availability_zones.*.name)}"
 
-    vpc_id            = "${aws_vpc.main.id}"
+    vpc_id            = "${aws_vpc.this.id}"
     availability_zone = "${element(data.aws_availability_zone.availability_zones.*.name, count.index)}"
-    cidr_block        = "${cidrsubnet(aws_vpc.main.cidr_block, var.subnet_cidr_newbits, count.index)}"
-    ipv6_cidr_block   = "${cidrsubnet(aws_vpc.main.ipv6_cidr_block, var.subnet_ipv6_cidr_newbits, count.index)}"
+    cidr_block        = "${cidrsubnet(aws_vpc.this.cidr_block, var.subnet_cidr_newbits, count.index)}"
+    ipv6_cidr_block   = "${cidrsubnet(aws_vpc.this.ipv6_cidr_block, var.subnet_ipv6_cidr_newbits, count.index)}"
     
     map_public_ip_on_launch = true
     assign_ipv6_address_on_creation = true
 
-    tags = {
-        Name = "${var.unit_id}-public"
-        UnitId = "${var.unit_id}"
-    }
+    tags = "${merge(map("Name", format("%s-public", var.name), "Unit", var.name), var.tags, var.subnet_tags)}"
 }
 
 /*
@@ -49,18 +51,15 @@ resource "aws_subnet" "public" {
 resource "aws_subnet" "protected" {
     count = "${length(data.aws_availability_zone.availability_zones.*.name)}"
 
-    vpc_id            = "${aws_vpc.main.id}"
+    vpc_id            = "${aws_vpc.this.id}"
     availability_zone = "${element(data.aws_availability_zone.availability_zones.*.name, count.index)}"
-    cidr_block        = "${cidrsubnet(aws_vpc.main.cidr_block, var.subnet_cidr_newbits, count.index + length(data.aws_availability_zone.availability_zones.*.name))}"
-    ipv6_cidr_block   = "${cidrsubnet(aws_vpc.main.ipv6_cidr_block, var.subnet_ipv6_cidr_newbits, count.index + length(data.aws_availability_zone.availability_zones.*.name))}"
+    cidr_block        = "${cidrsubnet(aws_vpc.this.cidr_block, var.subnet_cidr_newbits, count.index + length(data.aws_availability_zone.availability_zones.*.name))}"
+    ipv6_cidr_block   = "${cidrsubnet(aws_vpc.this.ipv6_cidr_block, var.subnet_ipv6_cidr_newbits, count.index + length(data.aws_availability_zone.availability_zones.*.name))}"
     
     map_public_ip_on_launch = true
     assign_ipv6_address_on_creation = true
 
-    tags = {
-        Name = "${var.unit_id}-protected"
-        UnitId = "${var.unit_id}"
-    }
+    tags = "${merge(map("Name", format("%s-protected", var.name), "Unit", var.name), var.tags, var.subnet_tags)}"
 }
 
 /*
@@ -71,16 +70,13 @@ resource "aws_subnet" "protected" {
 resource "aws_subnet" "private" {
     count = "${length(data.aws_availability_zone.availability_zones.*.name)}"
 
-    vpc_id            = "${aws_vpc.main.id}"
+    vpc_id            = "${aws_vpc.this.id}"
     availability_zone = "${element(data.aws_availability_zone.availability_zones.*.name, count.index)}"
-    cidr_block        = "${cidrsubnet(aws_vpc.main.cidr_block, var.subnet_cidr_newbits, count.index + 2 * length(data.aws_availability_zone.availability_zones.*.name))}"
-    ipv6_cidr_block   = "${cidrsubnet(aws_vpc.main.ipv6_cidr_block, var.subnet_ipv6_cidr_newbits, count.index + 2 * length(data.aws_availability_zone.availability_zones.*.name))}"
+    cidr_block        = "${cidrsubnet(aws_vpc.this.cidr_block, var.subnet_cidr_newbits, count.index + 2 * length(data.aws_availability_zone.availability_zones.*.name))}"
+    ipv6_cidr_block   = "${cidrsubnet(aws_vpc.this.ipv6_cidr_block, var.subnet_ipv6_cidr_newbits, count.index + 2 * length(data.aws_availability_zone.availability_zones.*.name))}"
     
     map_public_ip_on_launch = true
     assign_ipv6_address_on_creation = true
 
-    tags = {
-        Name = "${var.unit_id}-private"
-        UnitId = "${var.unit_id}"
-    }
+    tags = "${merge(map("Name", format("%s-private", var.name), "Unit", var.name), var.tags, var.subnet_tags)}"
 }
