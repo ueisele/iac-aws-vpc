@@ -38,7 +38,7 @@ resource "aws_subnet" "public" {
     map_public_ip_on_launch = true
     assign_ipv6_address_on_creation = true
 
-    tags = "${merge(map("Name", format("%s-public", var.name), "Unit", var.name), var.tags, var.subnet_tags)}"
+    tags = "${merge(map("Name", format("%s-${var.public_subnet_suffix}", var.name), "Unit", var.name), var.tags, var.public_subnet_tags)}"
 }
 
 /*
@@ -59,7 +59,7 @@ resource "aws_subnet" "protected" {
     map_public_ip_on_launch = true
     assign_ipv6_address_on_creation = true
 
-    tags = "${merge(map("Name", format("%s-protected", var.name), "Unit", var.name), var.tags, var.subnet_tags)}"
+    tags = "${merge(map("Name", format("%s-${var.protected_subnet_suffix}", var.name), "Unit", var.name), var.tags, var.protected_subnet_tags)}"
 }
 
 /*
@@ -78,5 +78,75 @@ resource "aws_subnet" "private" {
     map_public_ip_on_launch = true
     assign_ipv6_address_on_creation = true
 
-    tags = "${merge(map("Name", format("%s-private", var.name), "Unit", var.name), var.tags, var.subnet_tags)}"
+    tags = "${merge(map("Name", format("%s-${var.private_subnet_suffix}", var.name), "Unit", var.name), var.tags, var.private_subnet_tags)}"
+}
+
+###################
+# Internet Gateway
+###################
+/*
+ * The Internet gateway, which enables access to the public subnets from the internet
+ * https://docs.aws.amazon.com/de_de/vpc/latest/userguide/VPC_Internet_Gateway.html
+ * https://www.terraform.io/docs/providers/aws/r/internet_gateway.html
+ */
+resource "aws_internet_gateway" "this" {
+  vpc_id = "${aws_vpc.this.id}"
+
+  tags = "${merge(map("Name", format("%s", var.name), "Unit", var.name), var.tags, var.igw_tags)}"
+}
+
+/*
+ * Gateway for egress IPv6 communication
+ * https://docs.aws.amazon.com/de_de/vpc/latest/userguide/egress-only-internet-gateway.html
+ * https://www.terraform.io/docs/providers/aws/r/egress_only_internet_gateway.html
+ */
+resource "aws_egress_only_internet_gateway" "this" {
+  vpc_id = "${aws_vpc.this.id}"
+}
+
+################
+# Publiс routes
+################
+/*
+ * Route table for the public subnets
+ * https://www.terraform.io/docs/providers/aws/r/route_table.html
+ */
+resource "aws_route_table" "public" {
+  vpc_id = "${aws_vpc.this.id}"
+
+  tags = "${merge(map("Name", format("%s-${var.public_subnet_suffix}", var.name), "Unit", var.name), var.tags, var.public_route_table_tags)}"
+}
+
+/*
+ * Default route for IPv4 traffic which enables internet access
+ * https://www.terraform.io/docs/providers/aws/r/route.html
+ */
+resource "aws_route" "public_internet_gateway_ipv4" {
+  route_table_id         = "${aws_route_table.public.id}"
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = "${aws_internet_gateway.this.id}"
+}
+
+/*
+ * Default route for IPv6 traffic which enables internet access
+ * https://www.terraform.io/docs/providers/aws/r/route.html
+ */
+resource "aws_route" "public_internet_gateway_ipv6" {
+  route_table_id         = "${aws_route_table.public.id}"
+  destination_ipv6_cidr_block = "::/0"
+  gateway_id             = "${aws_internet_gateway.this.id}"
+}
+
+################
+# Publiс routes subnet association
+################
+/*
+ * Associate the public route table with the public subnets
+ * https://www.terraform.io/docs/providers/aws/r/route_table_association.html
+ */
+resource "aws_route_table_association" "public" {
+    count = "${length(data.aws_availability_zone.availability_zones.*.name)}"
+
+    subnet_id = "${element(aws_subnet.public.*.id, count.index)}"
+    route_table_id = "${aws_route_table.public.id}"
 }

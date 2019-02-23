@@ -15,8 +15,4 @@ module "vpc" {
   vpc_tags = {
     SomeVPCTag = "someTag"
   }
-
-  subnet_tags = {
-    SomeSubnetTag       = "someTag"
-  }
 }

@@ -23,6 +23,21 @@ variable "subnet_ipv6_cidr_newbits" {
   default     = 8
 }
 
+variable "public_subnet_suffix" {
+  description = "Suffix to append to public subnets name"
+  default     = "public"
+}
+
+variable "protected_subnet_suffix" {
+  description = "Suffix to append to protected subnets name"
+  default     = "protected"
+}
+
+variable "private_subnet_suffix" {
+  description = "Suffix to append to private subnets name"
+  default     = "private"
+}
+
 variable "tags" {
   description = "A map of tags to add to all resources"
   default     = {}
@@ -33,7 +48,32 @@ variable "vpc_tags" {
   default     = {}
 }
 
-variable "subnet_tags" {
-  description = "Additional tags for the subnets"
+variable "public_subnet_tags" {
+  description = "Additional tags for the public subnets"
+  default     = {}
+}
+
+variable "protected_subnet_tags" {
+  description = "Additional tags for the public subnets"
+  default     = {}
+}
+
+variable "private_subnet_tags" {
+  description = "Additional tags for the public subnets"
+  default     = {}
+}
+
+variable "igw_tags" {
+  description = "Additional tags for the internet gateway"
+  default     = {}
+}
+
+variable "egress_igw_tags" {
+  description = "Additional tags for the egress internet gateway"
+  default     = {}
+}
+
+variable "public_route_table_tags" {
+  description = "Additional tags for the public route table"
   default     = {}
 }
